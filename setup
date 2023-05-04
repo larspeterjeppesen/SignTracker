@@ -1,0 +1,11 @@
+/*Create db in terminal with 'sqlite3 amp.db'           */
+/*Enable foreign keys: 'PRAGMA foreign_keys = ON;'      */
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE benched (
+  event_id  INTEGER NOT NULL,
+  name      TEXT    NOT NULL,
+  PRIMARY KEY (event_id, name)
+) WITHOUT ROWID;
+
+

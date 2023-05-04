@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS event_participants;
+DROP TABLE IF EXISTS wotlk_events;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS user_permissions;
+DROP TABLE IF EXISTS characters_wotlk;
+DROP TABLE IF EXISTS characters;
+DROP TABLE IF EXISTS users;

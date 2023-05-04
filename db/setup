@@ -1,0 +1,97 @@
+/*Create db in terminal with 'sqlite3 amp.db'           */
+/*Enable foreign keys: 'PRAGMA foreign_keys = ON;'      */
+PRAGMA foreign_keys = ON;
+
+
+CREATE TABLE users (
+  discord_id      INTEGER  NOT NULL PRIMARY KEY, 
+  discord_name    TEXT     NOT NULL,
+  date_joined     TEXT     NOT NULL,
+  premium         INTEGER  NOT NULL
+) WITHOUT ROWID;
+
+CREATE TABLE user_permissions (
+  user_id           INTEGER  NOT NULL,
+  guild_id          INTEGER  NOT NULL,
+  create_event      INTEGER  NOT NULL,
+  sign_event        INTEGER  NOT NULL,
+  create_template   INTEGER  NOT NULL,
+  PRIMARY KEY (user_id, guild_id),
+  FOREIGN KEY (user_id)
+    REFERENCES users (discord_id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+) WITHOUT ROWID;
+
+CREATE TABLE characters (
+  id              INTEGER  PRIMARY KEY,
+  discord_id      INTEGER  NOT NULL,
+  name            TEXT     NOT NULL,
+  FOREIGN KEY (discord_id)
+    REFERENCES users (discord_id)
+);
+
+CREATE TABLE characters_wotlk (
+  id        INTEGER   PRIMARY KEY,
+  class     TEXT      NOT NULL,
+  role      TEXT      NOT NULL,
+  level     INTEGER   NOT NULL,
+  ilvl      INTEGER,
+  gearscore INTEGER,
+  FOREIGN KEY (id)
+    REFERENCES characters (id)
+) WITHOUT ROWID;
+
+
+CREATE TABLE events (
+  id              INTEGER   PRIMARY KEY,
+  title           TEXT      NOT NULL,
+  description     TEXT,
+  date_created    TEXT      NOT NULL,
+  date_deadline   TEXT      NOT NULL,
+  guild_id        INTEGER   NOT NULL,
+  creator         TEXT      NOT NULL,
+  game            TEXT,
+  players_min     INTEGER,
+  players_max     INTEGER
+);
+
+CREATE TABLE event_participants (
+  event_id        INTEGER   NOT NULL, 
+  character_id    INTEGER   NOT NULL,
+  signup_datetime TEXT      NOT NULL,
+  late            TEXT,
+  note            TEXT,
+  PRIMARY KEY (event_id, character_id),
+  FOREIGN KEY (event_id)
+    REFERENCES events (id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (character_id)
+    REFERENCES characters (id)
+    ON UPDATE CASCADE ON DELETE CASCADE 
+) WITHOUT ROWID;
+
+CREATE TABLE wotlk_events (
+  event_id          INTEGER PRIMARY KEY,
+  ilvl            INTEGER,
+  Gearscore       INTEGER, 
+  Tanks           TEXT,     --single val or interval
+  Dps             TEXT,     --all below is as above
+  Healers         TEXT,
+  Warrior         TEXT, 
+  Rogue           TEXT,
+  Shaman          TEXT,
+  Hunter          TEXT,
+  Paladin         TEXT,
+  Warlock         TEXT,
+  Mage            TEXT,
+  Druid           TEXT,
+  Priest          TEXT,
+  Deathknight     TEXT,
+
+  FOREIGN KEY (event_id)
+    REFERENCES events (id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+) WITHOUT ROWID;
+
+
+

@@ -1,0 +1,46 @@
+INSERT INTO users (discord_id, discord_name, date_joined, premium)
+VALUES
+(1234,'Lars','2023-03-23 15:00:01',1),
+(1235,'SpiNr','2023-03-25 18:23:58',0)
+;
+
+INSERT INTO user_permissions (user_id, guild_id, create_event, sign_event, create_template)
+VALUES
+(1234, 123, 1, 1, 1),
+(1235, 123, 0, 0, 0)
+;
+
+INSERT INTO events (title, description, date_created, date_deadline, guild_id, creator, game, players_min, players_max)
+VALUES
+('naxx 25', "let's get some purples",    '08-04-2023 13:30', '12-04-2023 12:00', 123, 'Lars', 'wotlk', 2, 5),
+('Lilis birthday', 'all cats are welcome','08-04-2023 13:33', '03-09-2023 12:00', 123, 'Lili', 'irl',   5, 27)
+;
+
+INSERT INTO characters (discord_id, name)
+VALUES
+(1234,'Lkslayer'),
+(1235,'Fluffbuff'),
+(1234,'Pixipants')
+;
+
+INSERT INTO event_participants (event_id, character_id, signup_datetime, late, note)
+VALUES
+(1, 1, '00-00-0000 00:00', 'no', 'hej'),
+(1, 2, '00-00-0000 00:00', 'no', 'med'),
+(1, 3, '00-00-0000 00:00', 'no', 'dig')
+;
+
+INSERT INTO characters_wotlk (id, class, role, level, ilvl, gearscore)
+VALUES
+(1, 'Druid', 'tank', 40, 75, 400),
+(2, 'Druid', 'healer', 40, 72, 392),
+(3, 'Deathknight', 'dps', 80, 215, 4800)
+;
+
+
+
+
+INSERT INTO events (title, date_created, date_deadline, guild_id, creator, game)
+VALUES
+('uld 10', '08-04-2023 14:37', '09-04-2023 22:00', 124, 'Lars', 'wotlk')
+;
