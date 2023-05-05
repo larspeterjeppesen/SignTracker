@@ -13,9 +13,34 @@ def create_connection():
     print(e)
   return conn
 
+def get_tracker_message(event_id):
+  try:
+    sql = ''' SELECT message_id FROM trackers WHERE event_id = ? '''
+    cur = conn.cursor()
+    cur.execute(sql, (event_id,))
+  except Exception as e:
+    print(f'exception {e} in method tracker_exists')
+  res = cur.fetchall()
+  if (len(res) == 0):
+    return None
+  return res[0][0]
+
+def store_tracker_message(event_id, message_id):
+  try:
+    sql = ''' INSERT INTO trackers (event_id, message_id)
+              VALUES (?,?) ''' 
+    cur = conn.cursor()
+    cur.execute(sql, (event_id, message_id))
+    conn.commit()
+  except sqlite3.IntegrityError as e:
+    return False
+  except Exception as e:
+    print(f'exception {e} in method store_tracker_message')
+  return True
+
 def get_benched(ID):
   try:
-    sql = ''' SELECT name FROM benched WHERE ID = ? '''
+    sql = ''' SELECT name FROM benched WHERE event_id = ? '''
     cur = conn.cursor()
     cur.execute(sql, (ID,))
   except Exception as e:
@@ -26,23 +51,25 @@ def get_benched(ID):
     benched.append(tup[0])
   return benched
 
-def bench(ID, name):
+def db_bench(ID, name):
   try:
-    sql = ''' INSERT INTO benched VALUE (event_id, name) 
+    sql = ''' INSERT INTO benched (event_id, name) 
               VALUES (?,?) '''
     cur = conn.cursor()
     cur.execute(sql, (ID, name))
+    conn.commit()
   except sqlite3.IntegrityError as e:
     return False
   except Exception as e:
     print(f'exception {e} in method db_bench')
   return True  
 
-def unbench(ID, name):
+def db_unbench(ID, name):
   try:
     sql = ''' DELETE FROM benched WHERE event_id = ? AND name = ? '''
     cur = conn.cursor()
     cur.execute(sql, (ID, name))
+    conn.commit()
   except Exception as e:
     print('exception {e} in method db_unbench')
   if cur.rowcount == 0:
@@ -65,29 +92,49 @@ def get_signs_from_site(ID):
   return signs
 
 
+async def update_tracker_message(interaction, event_id):
+  message_id = get_tracker_message(event_id)
+  message = await interaction.channel.fetch_message(message_id)
+  embed = build_embed(interaction, event_id)
+  await message.edit(content=message.content, embed=embed)
 
-def build_embed(ID, signed, benched, not_signed):
-  #Format player lists
-  n_signed = len(signed)
+def build_embed(interaction, event_id):
+  #Build player lists 
+  signed = get_signs_from_site(event_id)
+  benched = get_benched(event_id)
+  not_signed_members = interaction.channel.members
+  not_signed = []
+  for member in not_signed_members:
+    if (not signed.__contains__(member.name) and not member.bot):
+      not_signed.append(member.name)
+ 
+  for name in benched:
+    if (name in signed):
+      signed.remove(name)
+ 
+ #Format player lists
+  n_available = len(signed['Available'])
+  available = '\n'.join(signed['Available'])
+  n_absent = len(signed['Absent'])
+  absent = '\n'.join(signed['Absent'])
   n_benched = len(benched)
-  n_not_signed = len(not_signed)
-  signed = '\n'.join(signed)
-  not_signed = '\n'.join(not_signed)
   benched = '\n'.join(benched)
+  n_not_signed = len(not_signed)
+  not_signed = '\n'.join(not_signed)
 
-
-  embed = discord.Embed(title=f'Tracker for event {ID}',
+  embed = discord.Embed(title=f'Tracker for event {event_id}',
                         description='',
                         colour=discord.Colour.green())
   
-  embed.add_field(name='Signed players', value=signed, inline=False)
-  embed.add_field(name='Benched', value=benched, inline=False)
+  embed.add_field(name='Players available', value=available, inline=True)
+  embed.add_field(name='Benched', value=benched, inline=True)
+  embed.add_field(name=' ', value=' ', inline=False)
+  embed.add_field(name='Absent', value=absent, inline = True) 
   embed.add_field(name='Not signed players', value=not_signed, inline=True)
-
 
   embed.set_footer(text='Contact pixi if this sheet looks broken or incorrent')
 
-
+  return embed
 
 class SignClient(discord.Client):
   def __init__(self):
@@ -113,33 +160,52 @@ class SignClient(discord.Client):
 
     @self.tree.command()
     async def track(interaction: discord.Interaction, event_id: str):
-      signed = get_signs_from_site(event_id)
-      not_signed = interaction.channel.members
-      for member in not_signed:
-        if (signed.__contains__(member.name)):
-          not_signed.remove(name)
-      
-      benched = get_benched(event_id)
-
-      embed = build_embed(event_id, signed, benched, not_signed)
-
-      await interaction.response.send_message(embed=embed)
+      if (get_tracker_message(event_id) != None):
+        await interaction.response.send_message('Event is already being tracked')
+        return
+       
+      embed = build_embed(interaction, event_id)
+      response = f'tracking event {event_id}'
+      await interaction.response.send_message(content=response, embed=embed)
+      message = await interaction.original_response()
+      store_tracker_message(event_id, message.id)
+        
 
     @self.tree.command()
     async def bench(interaction: discord.Interaction, player: str, event_id: str):
-      ret = bench(event_id, player)
-      if (not ret):
-        await interaction.response.send_message('Player is already benched', ephemeral=True)
+      name = None
+      for member in interaction.channel.members:
+        if (member.name.lower() == player.lower()):
+          name = member.name
+      if (name == None):
+        await interaction.response.send_message(f'{player} not found.', ephemeral=True)
       else:
-        await interaction.response.send_message('Player benched', ephemeral=True)
+        ret = db_bench(event_id, name)
+        if (not ret):
+          await interaction.response.send_message(f'{player} is already benched.', ephemeral=True)
+        else:
+          await update_tracker_message(interaction, event_id)
+          await interaction.response.send_message(f'{player} benched.', ephemeral=True)
+
+
+
 
     @self.tree.command()
     async def unbench(interaction: discord.Interaction, player: str, event_id: str):
-      ret = unbench(event_id, player)
+      name = None
+      for member in interaction.channel.members:
+        if (member.name.lower() == player):
+          name = member.name
+      if (name == None):
+        print('success')
+        #await interaction.response.send_message(f'{player} not recognized.', ephemeral=True)
+    
+      ret = db_unbench(event_id, name)
       if (not ret):
-        await interaction.response.send_message('Player was not benched, cannot unbench', ephemeral=True)
+        await interaction.response.send_message(f'{player} is not benched, cannot unbench.', ephemeral=True)
       else:
-        await interaction.response.send_message('Player benched')
+        await update_tracker_message(interaction, event_id)
+        await interaction.response.send_message(f'{player} unbenched.', ephemeral=True)
 
 
 load_dotenv()

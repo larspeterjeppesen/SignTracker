@@ -1,11 +1,17 @@
 /*Create db in terminal with 'sqlite3 amp.db'           */
 /*Enable foreign keys: 'PRAGMA foreign_keys = ON;'      */
-PRAGMA foreign_keys = ON;
+DROP TABLE IF EXISTS benched;
+DROP TABLE IF EXISTS trackers;
+
+/*PRAGMA foreign_keys = ON;*/
 
 CREATE TABLE benched (
-  event_id  INTEGER NOT NULL,
-  name      TEXT    NOT NULL,
+  event_id  INTEGER        NOT NULL,
+  name      COLLATE NOCASE NOT NULL,   
   PRIMARY KEY (event_id, name)
 ) WITHOUT ROWID;
 
-
+CREATE TABLE trackers (
+  event_id    TEXT  NOT NULL PRIMARY KEY,
+  message_id  TEXT  NOT NULL
+) WITHOUT ROWID;
