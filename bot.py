@@ -13,6 +13,18 @@ def create_connection():
     print(e)
   return conn
 
+def del_tracker(event_id):
+  try:
+    sql = ''' DELETE FROM trackers WHERE event_id = ? '''
+    cur = conn.cursor()
+    cur.execute(sql, (event_id,))
+    conn.commit()
+  except Exception as e:
+    print(f'exception {e} in method del_tracker')
+  if (cur.rowcount == 0):
+    return False
+  return True
+
 def get_tracker_message(event_id):
   try:
     sql = ''' SELECT message_id FROM trackers WHERE event_id = ? '''
@@ -126,11 +138,11 @@ def build_embed(interaction, event_id):
                         description='',
                         colour=discord.Colour.green())
   
-  embed.add_field(name='Players available', value=available, inline=True)
-  embed.add_field(name='Benched', value=benched, inline=True)
+  embed.add_field(name=f'Players available ({n_available})', value=available, inline=True)
+  embed.add_field(name=f'Benched ({n_benched})', value=benched, inline=True)
   embed.add_field(name=' ', value=' ', inline=False)
-  embed.add_field(name='Absent', value=absent, inline = True) 
-  embed.add_field(name='Not signed players', value=not_signed, inline=True)
+  embed.add_field(name=f'Absent ({n_absent})', value=absent, inline = True) 
+  embed.add_field(name=f'Not signed players ({n_not_signed})', value=not_signed, inline=True)
 
   embed.set_footer(text='Contact pixi if this sheet looks broken or incorrent')
 
@@ -169,6 +181,15 @@ class SignClient(discord.Client):
       await interaction.response.send_message(content=response, embed=embed)
       message = await interaction.original_response()
       store_tracker_message(event_id, message.id)
+
+    @self.tree.command()
+    async def untrack(interaction: discord.Interaction, event_id: str, remove_benches: str):
+      ret = del_tracker(event_id)
+      response = 'Tracker not found, can\t delete.'
+      if (ret):
+        response = 'Tracker deleted'
+      await interaction.response.send_message(response)
+        
         
 
     @self.tree.command()
@@ -186,9 +207,6 @@ class SignClient(discord.Client):
         else:
           await update_tracker_message(interaction, event_id)
           await interaction.response.send_message(f'{player} benched.', ephemeral=True)
-
-
-
 
     @self.tree.command()
     async def unbench(interaction: discord.Interaction, player: str, event_id: str):
