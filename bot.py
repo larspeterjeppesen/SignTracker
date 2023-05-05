@@ -190,8 +190,6 @@ class SignClient(discord.Client):
         response = 'Tracker deleted'
       await interaction.response.send_message(response)
         
-        
-
     @self.tree.command()
     async def bench(interaction: discord.Interaction, player: str, event_id: str):
       name = None
