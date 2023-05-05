@@ -170,7 +170,7 @@ class SignClient(discord.Client):
       print(f'Logged in as user: {self.user}')
       print('------\n')
 
-    @self.tree.command()
+    @self.tree.command(description='Track a raidhelper event. Copy the ID from the event you want to track and use it in the command. A tracker for any event can only be posted once. Use /untrack to circumvent.')
     async def track(interaction: discord.Interaction, event_id: str):
       if (get_tracker_message(event_id) != None):
         await interaction.response.send_message('Event is already being tracked')
@@ -182,15 +182,15 @@ class SignClient(discord.Client):
       message = await interaction.original_response()
       store_tracker_message(event_id, message.id)
 
-    @self.tree.command()
-    async def untrack(interaction: discord.Interaction, event_id: str, remove_benches: str):
+    @self.tree.command(description='Remove an event from being tracked, allowing you to post it elsewhere. Does not remove record of who has been benched.')
+    async def untrack(interaction: discord.Interaction, event_id: str):
       ret = del_tracker(event_id)
       response = 'Tracker not found, can\t delete.'
       if (ret):
         response = 'Tracker deleted'
       await interaction.response.send_message(response)
         
-    @self.tree.command()
+    @self.tree.command(description='Bench a player for the given event. Just like in /track, copy the ID from the event you want to bench a player on')
     async def bench(interaction: discord.Interaction, player: str, event_id: str):
       name = None
       for member in interaction.channel.members:
@@ -206,7 +206,7 @@ class SignClient(discord.Client):
           await update_tracker_message(interaction, event_id)
           await interaction.response.send_message(f'{player} benched.', ephemeral=True)
 
-    @self.tree.command()
+    @self.tree.command(description='Unbench a player for the given event. Works like /bench')
     async def unbench(interaction: discord.Interaction, player: str, event_id: str):
       name = None
       for member in interaction.channel.members:
