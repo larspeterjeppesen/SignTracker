@@ -170,7 +170,7 @@ class SignClient(discord.Client):
       print(f'Logged in as user: {self.user}')
       print('------\n')
 
-    @self.tree.command(description='Track a raidhelper event. Copy the ID from the event you want to track and use it in the command. A tracker for any event can only be posted once. Use /untrack to circumvent.')
+    @self.tree.command(description='Track a raidhelper event. Copy raid id here. Can only be posted once, circumvent with /untrack')
     async def track(interaction: discord.Interaction, event_id: str):
       if (get_tracker_message(event_id) != None):
         await interaction.response.send_message('Event is already being tracked')
@@ -182,7 +182,7 @@ class SignClient(discord.Client):
       message = await interaction.original_response()
       store_tracker_message(event_id, message.id)
 
-    @self.tree.command(description='Remove an event from being tracked, allowing you to post it elsewhere. Does not remove record of who has been benched.')
+    @self.tree.command(description='Allows you to use repost the tracked event. Does not remove benches.')
     async def untrack(interaction: discord.Interaction, event_id: str):
       ret = del_tracker(event_id)
       response = 'Tracker not found, can\t delete.'
@@ -190,7 +190,7 @@ class SignClient(discord.Client):
         response = 'Tracker deleted'
       await interaction.response.send_message(response)
         
-    @self.tree.command(description='Bench a player for the given event. Just like in /track, copy the ID from the event you want to bench a player on')
+    @self.tree.command(description='Bench a player for the given event. Copy ID as in /track.')
     async def bench(interaction: discord.Interaction, player: str, event_id: str):
       name = None
       for member in interaction.channel.members:
@@ -222,6 +222,11 @@ class SignClient(discord.Client):
       else:
         await update_tracker_message(interaction, event_id)
         await interaction.response.send_message(f'{player} unbenched.', ephemeral=True)
+
+    @self.tree.command(description='Update event. Will be automatic at some point.')
+    async def update(interaction: discord.Interaction, event_id: str):
+        await update_tracker_message(interaction, event_id)
+        await interaction.response.send_message('Tracker updated', ephemeral=True)
 
 
 load_dotenv()
