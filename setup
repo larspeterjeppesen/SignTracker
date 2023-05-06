@@ -7,7 +7,8 @@ DROP TABLE IF EXISTS trackers;
 
 CREATE TABLE benched (
   event_id  INTEGER        NOT NULL,
-  name      COLLATE NOCASE NOT NULL,   
+  name      COLLATE NOCASE NOT NULL,
+  date      TEXT           NOT NULL,
   PRIMARY KEY (event_id, name)
 ) WITHOUT ROWID;
 

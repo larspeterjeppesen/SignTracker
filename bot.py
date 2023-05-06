@@ -158,11 +158,10 @@ class SignClient(discord.Client):
 
 
   async def setup_hook(self):
-    guild_obj = discord.Object(id=GUILD_ID)
-    self.tree.copy_global_to(guild=guild_obj)
-    await self.tree.sync(guild=guild_obj)
-    print('ran setup_hook')
-
+    for GUILD_ID in GUILD_IDS:
+      guild_obj = discord.Object(id=GUILD_ID)
+      self.tree.copy_global_to(guild=guild_obj)
+      await self.tree.sync(guild=guild_obj)
 
   def prepare_client(self):
     @self.event
@@ -231,7 +230,7 @@ class SignClient(discord.Client):
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD_ID = os.getenv('GUILD_ID')
+GUILD_IDS = os.getenv('GUILD_ID').split(', ')
 conn = create_connection()
 client = SignClient()
 client.run(TOKEN)
